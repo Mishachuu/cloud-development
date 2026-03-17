@@ -2,10 +2,13 @@ using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using VehicleApi.Models;
 using VehicleApi.Services;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+builder.Services.AddScoped<VehicleService>();
 
 builder.AddRedisDistributedCache("cache");
 
@@ -29,7 +32,7 @@ app.UseCors();
 
 app.MapDefaultEndpoints();
 
-app.MapGet("/api/vehicles", async (int id, VehicleService vehicleService, ILogger<Program> logger) =>
+app.MapGet("/api/vehicles", async (int id, [FromServices] VehicleService vehicleService, ILogger<Program> logger) =>
 {
     if (id <= 0)
     {
