@@ -1,45 +1,35 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var weights = builder.Configuration
-    .GetSection("ReplicaWeights")
+var ports = builder.Configuration
+    .GetSection("ApiService:Ports")
     .GetChildren()
-    .Select(x => double.Parse(x.Value!, System.Globalization.CultureInfo.InvariantCulture))
-    .ToArray();
+    .Select(x => int.Parse(x.Value!))
+    .ToList();
 
-if (weights.Length == 0)
-    weights = [0.5, 0.3, 0.2];
+if (ports.Count == 0)
+    ports = [5101, 5102, 5103];
+
+var gatewayPort = int.TryParse(builder.Configuration["ApiGateway:Port"], out var p) ? p : 5200;
 
 var cache = builder.AddRedis("cache")
     .WithRedisInsight();
 
-var replica1 = builder.AddProject<Projects.VehicleApi>("vehicleapi-1")
-    .WithReference(cache)
-    .WaitFor(cache)
-    .WithEnvironment("ASPNETCORE_URLS", "http://localhost:5101");
-
-var replica2 = builder.AddProject<Projects.VehicleApi>("vehicleapi-2")
-    .WithReference(cache)
-    .WaitFor(cache)
-    .WithEnvironment("ASPNETCORE_URLS", "http://localhost:5102");
-
-var replica3 = builder.AddProject<Projects.VehicleApi>("vehicleapi-3")
-    .WithReference(cache)
-    .WaitFor(cache)
-    .WithEnvironment("ASPNETCORE_URLS", "http://localhost:5103");
-
 var gateway = builder.AddProject<Projects.ApiGateway>("apigateway")
-    .WithReference(replica1)
-    .WithReference(replica2)
-    .WithReference(replica3)
-    .WaitFor(replica1)
-    .WaitFor(replica2)
-    .WaitFor(replica3)
-    .WithEnvironment("ASPNETCORE_URLS", "http://localhost:5200")
-    .WithEnvironment("WeightedRandom__vehicles__Weights__0", weights[0].ToString("F2", System.Globalization.CultureInfo.InvariantCulture))
-    .WithEnvironment("WeightedRandom__vehicles__Weights__1", weights[1].ToString("F2", System.Globalization.CultureInfo.InvariantCulture))
-    .WithEnvironment("WeightedRandom__vehicles__Weights__2", weights[2].ToString("F2", System.Globalization.CultureInfo.InvariantCulture));
+    .WithHttpEndpoint(port: gatewayPort, name: "gateway-endpoint", isProxied: false)
+    .WithExternalHttpEndpoints();
 
-var client = builder.AddProject<Projects.Client_Wasm>("client")
+var serviceId = 1;
+foreach (var port in ports)
+{
+    var replica = builder.AddProject<Projects.VehicleApi>($"vehicleapi-{serviceId++}")
+        .WithReference(cache)
+        .WithHttpEndpoint(port: port, name: "api-endpoint", isProxied: false)
+        .WithExternalHttpEndpoints();
+
+    gateway.WaitFor(replica);
+}
+
+builder.AddProject<Projects.Client_Wasm>("client")
     .WithReference(gateway)
     .WaitFor(gateway);
 

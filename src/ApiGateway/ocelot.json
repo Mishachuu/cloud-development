@@ -5,13 +5,13 @@
       "UpstreamHttpMethod": [ "GET" ],
       "DownstreamPathTemplate": "/api/vehicles",
       "DownstreamScheme": "http",
-      "DownstreamHostsAndPorts": [
+      "DownstreamHostAndPorts": [
         { "Host": "localhost", "Port": 5101 },
         { "Host": "localhost", "Port": 5102 },
         { "Host": "localhost", "Port": 5103 }
       ],
       "LoadBalancerOptions": {
-        "Type": "WeightedRandom",
+        "Type": "WeightedRandomLoadBalancer",
         "Key": "vehicles"
       }
     }

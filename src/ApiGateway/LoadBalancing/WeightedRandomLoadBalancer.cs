@@ -4,51 +4,25 @@ using Ocelot.Values;
 
 namespace ApiGateway.LoadBalancing;
 
-public sealed class WeightedRandomLoadBalancer : ILoadBalancer
+public class WeightedRandomLoadBalancer(List<Service> services, double[] weights) : ILoadBalancer
 {
-    public string Type => "WeightedRandom";
-
-    private readonly IReadOnlyList<(ServiceHostAndPort Host, double CumulativeWeight)> _entries;
-
-    public WeightedRandomLoadBalancer(
-        IReadOnlyList<ServiceHostAndPort> hosts,
-        IReadOnlyList<double> weights)
-    {
-        if (hosts.Count == 0)
-            throw new ArgumentException("Список хостов не может быть пустым.", nameof(hosts));
-
-        if (hosts.Count != weights.Count)
-            throw new ArgumentException(
-                $"Число хостов ({hosts.Count}) должно совпадать с числом весов ({weights.Count}).");
-
-        var sum = weights.Sum();
-        if (Math.Abs(sum - 1.0) > 1e-9)
-            throw new ArgumentException(
-                $"Сумма весов должна равняться 1. Текущая сумма: {sum:F6}");
-
-        var cumulative = 0.0;
-        var entries = new List<(ServiceHostAndPort, double)>(hosts.Count);
-        for (var i = 0; i < hosts.Count; i++)
-        {
-            cumulative += weights[i];
-            entries.Add((hosts[i], cumulative));
-        }
-        _entries = entries;
-    }
+    public string Type => nameof(WeightedRandomLoadBalancer);
 
     public Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
     {
+        var cumulative = 0.0;
         var roll = Random.Shared.NextDouble();
 
-        foreach (var (host, cumulativeWeight) in _entries)
+        for (var i = 0; i < services.Count; i++)
         {
-            if (roll < cumulativeWeight)
+            cumulative += weights[i];
+            if (roll < cumulative)
                 return Task.FromResult<Response<ServiceHostAndPort>>(
-                    new OkResponse<ServiceHostAndPort>(host));
+                    new OkResponse<ServiceHostAndPort>(services[i].HostAndPort));
         }
 
         return Task.FromResult<Response<ServiceHostAndPort>>(
-            new OkResponse<ServiceHostAndPort>(_entries[^1].Host));
+            new OkResponse<ServiceHostAndPort>(services[^1].HostAndPort));
     }
 
     public void Release(ServiceHostAndPort hostAndPort) { }

@@ -1,7 +1,6 @@
 using ApiGateway.LoadBalancing;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using Ocelot.Values;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,48 +12,27 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        var origins = builder.Configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? [];
-
-        policy.WithOrigins(origins)
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
 });
 
-var weights = new[] { 0.5, 0.3, 0.2 };
+var weights = builder.Configuration
+    .GetSection("WeightedRandom:Weights")
+    .Get<double[]>() ?? [0.5, 0.3, 0.2];
 
-var replicaKeys = new[]
-{
-    "services__vehicleapi-1__http__0",
-    "services__vehicleapi-2__http__0",
-    "services__vehicleapi-3__http__0",
-};
-
-var replicaHosts = replicaKeys
-    .Select(k => builder.Configuration[k])
-    .Where(v => v != null)
-    .Select(v => new Uri(v!))
-    .Select(u => new ServiceHostAndPort(u.Host, u.Port))
-    .ToList();
-
-foreach (var (h, i) in replicaHosts.Select((h, i) => (h, i)))
-    Console.WriteLine($"[Gateway] Replica {i + 1}: {h.DownstreamHost}:{h.DownstreamPort}");
-
-builder.Services
-    .AddOcelot(builder.Configuration)
-    .AddCustomLoadBalancer((route, discoveryProvider) =>
-        new WeightedRandomLoadBalancer(
-            replicaHosts.Count > 0 ? replicaHosts : route.DownstreamAddresses
-                .Select(a => new ServiceHostAndPort(a.Host, a.Port))
-                .ToList(),
-            weights));
+builder.Services.AddOcelot(builder.Configuration)
+    .AddCustomLoadBalancer<WeightedRandomLoadBalancer>((serviceProvider, route, serviceDiscoveryProvider) =>
+    {
+        var services = serviceDiscoveryProvider.GetAsync().GetAwaiter().GetResult().ToList();
+        return new WeightedRandomLoadBalancer(services, weights);
+    });
 
 var app = builder.Build();
 
 app.UseCors();
-app.MapDefaultEndpoints();
+app.MapDefaultEndpoints();  
 
 await app.UseOcelot();
 
