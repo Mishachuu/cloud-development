@@ -1,6 +1,3 @@
-using System.Text.Json;
-using Microsoft.Extensions.Caching.Distributed;
-using VehicleApi.Models;
 using VehicleApi.Services;
 using Microsoft.AspNetCore.Mvc;
 

@@ -54,9 +54,9 @@
 <summary>Оркестрация (.NET Aspire)</summary>
 <br>
 
-- Redis с RedisInsight
-- API сервис ждёт Redis (`WaitFor(cache)`)
-- Клиент WASM ждёт API (`WaitFor(api)`)
+- Redis
+- API сервис
+- Клиент WASM
 
 <br>
 </details>

@@ -4,12 +4,16 @@ using VehicleApi.Models;
 
 namespace VehicleApi.Services;
 
-public class VehicleService(IDistributedCache cache, ILogger<VehicleService> logger)
+public class VehicleService(IDistributedCache cache, ILogger<VehicleService> logger, IConfiguration config)
 {
-    private static readonly DistributedCacheEntryOptions _cacheOptions = new()
+    private DistributedCacheEntryOptions GetCacheOptions()
     {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-    };
+        var minutes = config.GetValue<int>("Cache:AbsoluteExpirationMinutes", 10);
+        return new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(minutes)
+        };
+    }
 
     public async Task<Vehicle> GetByIdAsync(int id)
     {
@@ -19,15 +23,17 @@ public class VehicleService(IDistributedCache cache, ILogger<VehicleService> log
         if (cachedData != null)
         {
             logger.LogInformation("Cache hit for vehicle ID {Id}", id);
-            return JsonSerializer.Deserialize<Vehicle>(cachedData)!;
+            var cached = JsonSerializer.Deserialize<Vehicle>(cachedData);
+            if (cached != null)
+                return cached;
         }
 
         logger.LogInformation("Cache miss for vehicle ID {Id}", id);
         var vehicle = VehicleGenerator.Generate(id);
 
         var serialized = JsonSerializer.SerializeToUtf8Bytes(vehicle);
-        await cache.SetAsync(cacheKey, serialized, _cacheOptions);
-        logger.LogInformation("Vehicle {Id} cached for 10 minutes", id);
+        await cache.SetAsync(cacheKey, serialized, GetCacheOptions());
+        logger.LogInformation("Vehicle {Id} cached", id);
 
         return vehicle;
     }

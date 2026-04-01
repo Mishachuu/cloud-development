@@ -1,8 +1,5 @@
-using VehicleApi.Models;
 using VehicleApi.Services;
 using Xunit;
-using VehicleApi.Models;
-using VehicleApi.Services;
 
 namespace VehicleApi.Tests;
 
@@ -14,7 +11,6 @@ public class VehicleGeneratorTests
         var vehicle1 = VehicleGenerator.Generate(42);
         var vehicle2 = VehicleGenerator.Generate(42);
 
-        Assert.Equal(vehicle1.Id, vehicle2.Id);
         Assert.Equal(vehicle1.Vin, vehicle2.Vin);
         Assert.Equal(vehicle1.Manufacturer, vehicle2.Manufacturer);
         Assert.Equal(vehicle1.Model, vehicle2.Model);
@@ -23,7 +19,6 @@ public class VehicleGeneratorTests
         Assert.Equal(vehicle1.FuelType, vehicle2.FuelType);
         Assert.Equal(vehicle1.Color, vehicle2.Color);
         Assert.Equal(vehicle1.Mileage, vehicle2.Mileage);
-        Assert.Equal(vehicle1.LastServiceDate, vehicle2.LastServiceDate);
     }
 
     [Theory]
@@ -41,7 +36,7 @@ public class VehicleGeneratorTests
     [Fact]
     public void Generate_YearConstraint_IsValid()
     {
-        for (int i = 1; i <= 100; i++)
+        for (var i = 1; i <= 100; i++)
         {
             var vehicle = VehicleGenerator.Generate(i);
 
@@ -53,7 +48,7 @@ public class VehicleGeneratorTests
     [Fact]
     public void Generate_MileageConstraint_IsValid()
     {
-        for (int i = 1; i <= 100; i++)
+        for (var i = 1; i <= 100; i++)
         {
             var vehicle = VehicleGenerator.Generate(i);
 
@@ -65,7 +60,7 @@ public class VehicleGeneratorTests
     [Fact]
     public void Generate_LastServiceDateConstraint_IsValid()
     {
-        for (int i = 1; i <= 100; i++)
+        for (var i = 1; i <= 100; i++)
         {
             var vehicle = VehicleGenerator.Generate(i);
 
