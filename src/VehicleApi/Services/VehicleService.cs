@@ -4,7 +4,11 @@ using VehicleApi.Models;
 
 namespace VehicleApi.Services;
 
-public class VehicleService(IDistributedCache cache, ILogger<VehicleService> logger, IConfiguration config)
+public class VehicleService(
+    IDistributedCache cache,
+    SqsPublisherService publisher,
+    ILogger<VehicleService> logger,
+    IConfiguration config)
 {
     private DistributedCacheEntryOptions GetCacheOptions()
     {
@@ -34,6 +38,8 @@ public class VehicleService(IDistributedCache cache, ILogger<VehicleService> log
         var serialized = JsonSerializer.SerializeToUtf8Bytes(vehicle);
         await cache.SetAsync(cacheKey, serialized, GetCacheOptions());
         logger.LogInformation("Vehicle {Id} cached", id);
+
+        await publisher.PublishAsync(vehicle);
 
         return vehicle;
     }
