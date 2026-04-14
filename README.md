@@ -1,5 +1,48 @@
 # Современные технологии разработки программного обеспечения
 
+**Вариант №17 — «Транспортное средство»**  
+**Выполнил:** Чукарев Михаил, группа 6511
+
+## Лабораторная работа №2 — «Балансировка нагрузки»
+
+### Описание
+
+Реализован ApiGateway с балансировкой нагрузки между тремя репликами сервиса генерации данных о транспортных средствах с оркестрацией через .NET Aspire.
+
+### Что реализовано
+
+<details>
+<summary>Балансировка нагрузки (Ocelot + WeightedRandom)</summary>
+<br>
+
+- ApiGateway на базе Ocelot
+- Кастомный балансировщик `WeightedRandomLoadBalancer`
+- Веса реплик настраиваются через `appsettings.json` (`WeightedRandom:Weights`)
+- Три реплики сервиса генерации
+
+<br>
+</details>
+
+<details>
+<summary>CORS</summary>
+<br>
+
+- Настроен на уровне ApiGateway (`AllowAnyOrigin`, `AllowAnyMethod`, `AllowAnyHeader`)
+
+<br>
+</details>
+
+<details>
+<summary>Оркестрация (.NET Aspire)</summary>
+<br>
+
+- Redis
+- Три реплики VehicleApi
+- ApiGateway
+- Клиент
+
+<br>
+</details>
 
 ## Лабораторная работа №1 — «Кэширование»
 

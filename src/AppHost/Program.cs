@@ -23,10 +23,12 @@ foreach (var port in ports)
 {
     var replica = builder.AddProject<Projects.VehicleApi>($"vehicleapi-{serviceId++}")
         .WithReference(cache)
+        .WaitFor(cache)
         .WithHttpEndpoint(port: port, name: "api-endpoint", isProxied: false)
         .WithExternalHttpEndpoints();
 
-    gateway.WaitFor(replica);
+    gateway.WithReference(replica)
+    .WaitFor(replica);
 }
 
 builder.AddProject<Projects.Client_Wasm>("client")

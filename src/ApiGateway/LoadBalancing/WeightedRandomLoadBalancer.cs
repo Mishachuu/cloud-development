@@ -22,7 +22,7 @@ public class WeightedRandomLoadBalancer(List<Service> services, double[] weights
         }
 
         return Task.FromResult<Response<ServiceHostAndPort>>(
-            new OkResponse<ServiceHostAndPort>(services[^1].HostAndPort));
+            new OkResponse<ServiceHostAndPort>(services[Random.Shared.Next(services.Count)].HostAndPort));
     }
 
     public void Release(ServiceHostAndPort hostAndPort) { }

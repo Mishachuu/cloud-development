@@ -9,23 +9,7 @@ builder.Services.AddScoped<VehicleService>();
 
 builder.AddRedisDistributedCache("cache");
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        var allowedOrigins = builder.Configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? [];
-
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
 var app = builder.Build();
-
-app.UseCors();
 
 app.MapDefaultEndpoints();
 
