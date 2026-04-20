@@ -12,7 +12,7 @@ var urls = new List<Uri>();
 
 for (var i = 1; ; i++)
 {
-    var url = builder.Configuration[$"services__vehicleapi-{i}__http__0"];
+    var url = builder.Configuration[$"services:vehicleapi-{i}:api-endpoint:0"];
     if (url == null) break;
     urls.Add(new Uri(url));
 }
@@ -30,7 +30,11 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        var allowedOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
