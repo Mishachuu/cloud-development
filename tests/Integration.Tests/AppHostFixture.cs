@@ -6,7 +6,6 @@ namespace Integration.Tests;
 
 /// <summary>
 /// Поднимает весь Aspire AppHost один раз для всей коллекции тестов.
-/// Все контейнеры (Redis, LocalStack, MinIO) запускаются через AppHost — как в продакшне.
 /// </summary>
 public sealed class AppHostFixture : IAsyncLifetime
 {
@@ -21,10 +20,9 @@ public sealed class AppHostFixture : IAsyncLifetime
         _app = await builder.BuildAsync();
         await _app.StartAsync();
 
-        GatewayClient = _app.CreateHttpClient("apigateway");
+        GatewayClient = _app.CreateHttpClient("apigateway", "gateway-endpoint");
         FileServiceClient = _app.CreateHttpClient("fileservice");
 
-        // Ждём, пока gateway реально ответит (контейнеры стартуют не мгновенно)
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         while (true)
         {

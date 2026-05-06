@@ -1,6 +1,7 @@
 using ApiGateway.LoadBalancing;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +55,15 @@ builder.Services.AddOcelot(builder.Configuration)
 var app = builder.Build();
 
 app.UseCors();
-app.MapDefaultEndpoints();  
+app.UseRouting();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHealthChecks("/health");
+    endpoints.MapHealthChecks("/alive", new HealthCheckOptions
+    {
+        Predicate = r => r.Tags.Contains("live")
+    });
+});
 
 await app.UseOcelot();
 

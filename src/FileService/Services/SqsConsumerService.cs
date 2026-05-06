@@ -73,23 +73,28 @@ public class SqsConsumerService(
     }
 
     private async Task ProcessMessageAsync(Message message, CancellationToken ct)
+{
+    try
     {
-        try
-        {
-            var objectName = $"vehicle-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss-fff}-{message.MessageId[..8]}.json";
+        using var doc = System.Text.Json.JsonDocument.Parse(message.Body);
+        var root = doc.RootElement;
+        
+        var id = 0;
+        if (root.TryGetProperty("Id", out var idProp) || root.TryGetProperty("id", out idProp))
+            id = idProp.GetInt32();
+        var objectName = $"vehicle-{id}-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss-fff}-{message.MessageId[..8]}.json";
 
-            await storage.SaveAsync(objectName, message.Body);
+        await storage.SaveAsync(objectName, message.Body);
+        await sqs.DeleteMessageAsync(_queueUrl, message.ReceiptHandle, ct);
 
-            await sqs.DeleteMessageAsync(_queueUrl, message.ReceiptHandle, ct);
-
-            logger.LogInformation("Processed message {MessageId} → saved as '{ObjectName}'",
-                message.MessageId, objectName);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to process message {MessageId}", message.MessageId);
-        }
+        logger.LogInformation("Processed message {MessageId} → saved as '{ObjectName}'",
+            message.MessageId, objectName);
     }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Failed to process message {MessageId}", message.MessageId);
+    }
+}
     private async Task EnsureQueueExistsAsync()
 {
     try

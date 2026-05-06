@@ -33,7 +33,7 @@ public class VehicleService(
         }
 
         logger.LogInformation("Cache miss for vehicle ID {Id}", id);
-        var vehicle = VehicleGenerator.Generate(id);
+        var vehicle = VehicleGenerator.Generate(id) with { Id = id };
 
         var serialized = JsonSerializer.SerializeToUtf8Bytes(vehicle);
         await cache.SetAsync(cacheKey, serialized, GetCacheOptions());

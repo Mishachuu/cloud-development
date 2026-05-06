@@ -25,6 +25,9 @@ builder.AddRedisDistributedCache("cache");
 
 var app = builder.Build();
 
+var publisher = app.Services.GetRequiredService<SqsPublisherService>();
+await publisher.EnsureQueueExistsAsync();
+
 app.MapDefaultEndpoints();
 
 app.MapGet("/api/vehicles", async (int id, [FromServices] VehicleService vehicleService, ILogger<Program> logger) =>

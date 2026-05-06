@@ -31,10 +31,16 @@ var localstack = builder.AddContainer("localstack", "localstack/localstack", "3.
     .WithEnvironment("LOCALSTACK_ACKNOWLEDGE_ACCOUNT_REQUIREMENT", "1")
     .WithHttpEndpoint(port: 4566, targetPort: 4566, name: "api");
 
+var localstackEndpoint = localstack.GetEndpoint("api");
+var minioEndpoint = minio.GetEndpoint("api");
+
+var sqsServiceUrl = ReferenceExpression.Create($"http://{localstackEndpoint.Property(EndpointProperty.Host)}:{localstackEndpoint.Property(EndpointProperty.Port)}");
+var sqsQueueUrl = ReferenceExpression.Create($"http://{localstackEndpoint.Property(EndpointProperty.Host)}:{localstackEndpoint.Property(EndpointProperty.Port)}/000000000000/vehicles");
+
 var fileService = builder.AddProject<Projects.FileService>("fileservice")
-    .WithEnvironment("Sqs__ServiceUrl", "http://localhost:4566")
-    .WithEnvironment("Sqs__QueueUrl", "http://localhost:4566/000000000000/vehicles")
-    .WithEnvironment("Minio__Endpoint", "localhost:9000")
+    .WithEnvironment("Sqs__ServiceUrl", sqsServiceUrl)
+    .WithEnvironment("Sqs__QueueUrl", sqsQueueUrl)
+    .WithEnvironment("Minio__Endpoint", ReferenceExpression.Create($"{minioEndpoint.Property(EndpointProperty.Host)}:{minioEndpoint.Property(EndpointProperty.Port)}"))
     .WaitFor(minio)
     .WaitFor(localstack);
 
@@ -46,16 +52,16 @@ var serviceId = 1;
 foreach (var port in ports)
 {
     var replica = builder.AddProject<Projects.VehicleApi>($"vehicleapi-{serviceId++}")
-    .WithReference(cache)
-    .WithEnvironment("Sqs__ServiceUrl", "http://localhost:4566")
-    .WithEnvironment("Sqs__QueueUrl", "http://localhost:4566/000000000000/vehicles")
-    .WithHttpEndpoint(port: port, name: "api-endpoint", isProxied: false)
-    .WithExternalHttpEndpoints()
-    .WaitFor(cache)
-    .WaitFor(localstack);
+        .WithReference(cache)
+        .WithEnvironment("Sqs__ServiceUrl", sqsServiceUrl)
+        .WithEnvironment("Sqs__QueueUrl", sqsQueueUrl)
+        .WithHttpEndpoint(port: port, name: "api-endpoint", isProxied: false)
+        .WithExternalHttpEndpoints()
+        .WaitFor(cache)
+        .WaitFor(localstack);
 
     gateway.WithReference(replica)
-    .WaitFor(replica);
+        .WaitFor(replica);
     fileService.WaitFor(replica);
 }
 

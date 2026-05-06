@@ -31,4 +31,19 @@ public class SqsPublisherService(IAmazonSQS sqs, IConfiguration config, ILogger<
         logger.LogInformation("Published vehicle {Id} to SQS, MessageId: {MessageId}",
             vehicle.Id, response.MessageId);
     }
+    public async Task EnsureQueueExistsAsync()
+{
+    try
+    {
+        var queueName = _queueUrl.Split('/').Last();
+        await sqs.CreateQueueAsync(new Amazon.SQS.Model.CreateQueueRequest { QueueName = queueName });
+        logger.LogInformation("SQS queue ensured by VehicleApi");
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning("Could not create queue: {Message}", ex.Message);
+    }
 }
+}
+
+
