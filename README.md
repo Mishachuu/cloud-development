@@ -3,6 +3,56 @@
 **Вариант №17 — «Транспортное средство»**  
 **Выполнил:** Чукарев Михаил, группа 6511
 
+## Лабораторная работа №3 — «Интеграционное тестирование»
+
+### Описание
+
+Реализован файловый сервис, сохраняющий данные о транспортных средствах в объектное хранилище через брокер сообщений, а также интеграционные тесты, проверяющие корректность работы всего бэкенда.
+
+### Что реализовано
+
+<details>
+<summary>Брокер сообщений (Amazon SQS + LocalStack)</summary>
+</details>
+
+<details>
+<summary>Файловый сервис (FileService)</summary>
+<br>
+
+- `MinioStorageService` — сохраняет JSON каждого сообщения как отдельный файл в MinIO
+- Эндпоинт `GET /files` — список всех файлов в bucket
+
+<br>
+</details>
+
+<details>
+<summary>Объектное хранилище (MinIO)</summary>
+<br>
+
+- Bucket `vehicles` создаётся автоматически при старте FileService
+- Хранение JSON-файлов с данными транспортных средств
+
+<br>
+</details>
+
+<details>
+<summary>Интеграционные тесты (xUnit + Aspire Testing)</summary>
+<br>
+
+- Поднимают весь AppHost целиком (Redis, LocalStack, MinIO, все сервисы)
+- `GetVehicle_ValidId_ReturnsOk` — gateway возвращает 200
+- `GetVehicle_ValidId_ReturnsExpectedFields` — ответ содержит все поля
+- `GetVehicle_InvalidId_ReturnsBadRequest` — валидация id=0
+- `GetVehicle_NegativeId_ReturnsBadRequest` — валидация отрицательных id
+- `GetVehicle_SameId_ReturnsCachedData` — одинаковый id возвращает одинаковые данные
+- `GetVehicle_DifferentIds_ReturnDifferentData` — разные id возвращают разные данные
+- `GetVehicle_FileAppearsInMinio` — файл появляется в MinIO после запроса (30 сек таймаут)
+- `FileService_HealthCheck_ReturnsOk` — health check FileService
+- `Gateway_HealthCheck_ReturnsOk` — health check ApiGateway
+
+<br>
+</details>
+
 ## Лабораторная работа №2 — «Балансировка нагрузки»
 
 ### Описание
