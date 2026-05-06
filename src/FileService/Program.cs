@@ -38,4 +38,10 @@ var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
+app.MapGet("/files", async (MinioStorageService storage) =>
+{
+    var files = await storage.ListFilesAsync();
+    return Results.Ok(files);
+});
+
 app.Run();

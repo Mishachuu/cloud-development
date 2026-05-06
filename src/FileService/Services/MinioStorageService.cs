@@ -49,4 +49,20 @@ public class MinioStorageService(IMinioClient minio, IConfiguration config, ILog
 
         logger.LogInformation("Saved object '{Object}' to bucket '{Bucket}'", objectName, _bucketName);
     }
+
+    /// <summary>
+    /// Возвращает список имён всех файлов в bucket.
+    /// </summary>
+    public async Task<List<string>> ListFilesAsync()
+    {
+        var items = new List<string>();
+        var args = new ListObjectsArgs()
+            .WithBucket(_bucketName)
+            .WithRecursive(true);
+
+        await foreach (var item in minio.ListObjectsEnumAsync(args))
+            items.Add(item.Key);
+
+        return items;
+    }
 }

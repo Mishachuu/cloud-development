@@ -40,3 +40,7 @@ app.MapGet("/api/vehicles", async (int id, [FromServices] VehicleService vehicle
 });
 
 app.Run();
+
+
+
+namespace VehicleApi { public partial class Program { } }

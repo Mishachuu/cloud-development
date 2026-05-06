@@ -15,17 +15,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="AWSSDK.SQS" Version="3.7.400.51" />
-    <PackageReference Include="Testcontainers" Version="4.0.0" />
-    <PackageReference Include="Testcontainers.Redis" Version="4.0.0" />
-    <PackageReference Include="Testcontainers.Minio" Version="4.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="Aspire.Hosting.Testing" Version="9.5.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\VehicleApi\VehicleApi.csproj" />
-    <ProjectReference Include="..\..\src\FileService\FileService.csproj" />
+    <ProjectReference Include="..\..\src\AppHost\AppHost.csproj" />
   </ItemGroup>
 
 </Project>
