@@ -10,7 +10,6 @@ if (ports.Count == 0)
     ports = [5101, 5102, 5103];
 
 var gatewayPort = int.TryParse(builder.Configuration["ApiGateway:Port"], out var p) ? p : 5200;
-var fileServicePort = int.TryParse(builder.Configuration["FileService:Port"], out var fp) ? fp : 5300;
 
 var cache = builder.AddRedis("cache")
     .WithRedisInsight();
@@ -51,7 +50,7 @@ var gateway = builder.AddProject<Projects.ApiGateway>("apigateway")
 var serviceId = 1;
 foreach (var port in ports)
 {
-    var replica = builder.AddProject<Projects.VehicleApi>($"vehicleapi-{serviceId++}")
+    var replica = builder.AddProject<Projects.VehicleApi>($"vehicleapi-{serviceId++}", launchProfileName: null)
         .WithReference(cache)
         .WithEnvironment("Sqs__ServiceUrl", sqsServiceUrl)
         .WithEnvironment("Sqs__QueueUrl", sqsQueueUrl)
