@@ -3,6 +3,67 @@
 **Вариант №17 — «Транспортное средство»**  
 **Выполнил:** Чукарев Михаил, группа 6511
 
+## Лабораторная работа №4 — «Переход на облачную инфраструктуру»
+
+### Описание
+
+Все сервисы перенесены в Yandex Cloud. Клиент размещён в объектном хранилище, сервисы генерации и обработки файлов развёрнуты как Cloud Functions, очередь сообщений заменена на Yandex Message Queue, а маршрутизация реализована через Yandex API Gateway.
+
+### Что реализовано
+
+<details>
+<summary>Клиент (Object Storage)</summary>
+</details>
+
+<details>
+<summary>Брокер сообщений (LocalStack SQS → Yandex Message Queue)</summary>
+<br>
+
+- Создана стандартная очередь `vehicles`
+
+<br>
+</details>
+
+<details>
+<summary>Объектное хранилище (MinIO → Object Storage)</summary>
+<br>
+
+- Создан приватный бакет `vehicles-storage`
+- Minio SDK заменён на AWS S3 SDK с endpoint `storage.yandexcloud.net`
+- JSON-файлы транспортных средств сохраняются автоматически при каждом запросе
+
+<br>
+</details>
+
+<details>
+<summary>Сервис генерации (VehicleApi → Cloud Function)</summary>
+<br>
+
+- Генерация данных через `VehicleGenerator` с детерминированным seed по `id`
+
+<br>
+</details>
+
+<details>
+<summary>Файловый сервис (FileService → Cloud Function + триггер YMQ)</summary>
+<br>
+
+- JSON сохраняется в бакет `vehicles-storage` через AWS S3 SDK
+
+<br>
+</details>
+
+<details>
+<summary>API Gateway (Ocelot → Yandex API Gateway)</summary>
+<br>
+
+- Создан шлюз `vehicle-gateway` на основе OpenAPI-спецификации
+- Маршрут `GET /api/vehicles?id={id}` проксирует запросы в Cloud Function `vehicle-api`
+
+<br>
+</details>
+
+
 ## Лабораторная работа №3 — «Интеграционное тестирование»
 
 ### Описание
