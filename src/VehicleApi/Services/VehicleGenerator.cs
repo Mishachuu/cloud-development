@@ -19,8 +19,9 @@ public static class VehicleGenerator
             DateOnly.FromDateTime(f.Date.Between(new DateTime(v.Year, 1, 1), DateTime.Now)));
 
     public static Vehicle Generate(int id)
-    {
-        _faker.UseSeed(id);
-        return _faker.Generate();
-    }
+{
+    _faker.UseSeed(id);
+    var vehicle = _faker.Generate();
+    return vehicle with { Id = id };
+}
 }
